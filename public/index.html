@@ -205,6 +205,14 @@
             <span id="narrator-text">Welcome to dinner!</span>
           </div>
 
+          <!-- deadlock callout: inline + non-blocking, so the table (and the red
+               circular-wait arrows that explain the cause) stay fully visible -->
+          <div id="deadlock-banner" class="deadlock-banner" hidden role="status" aria-live="assertive">
+            <span class="deadlock-banner__stamp">DEADLOCK</span>
+            <p class="deadlock-banner__text"><b>Everyone holds their LEFT fork and waits for their RIGHT</b> — held by a neighbour who’s also waiting. A circular wait: nobody will ever let go. ↓ the red arrows show who’s stuck on whom.</p>
+            <button class="btn btn--ghost-safe btn--small js-resolve">🩹 Break the jam</button>
+          </div>
+
           <div class="stage" id="stage" data-tip="Click a philosopher to pick up a fork">
             <svg id="stage-svg" class="stage__svg" aria-label="Dining table with philosophers and forks"></svg>
             <div id="stage-phils" class="stage__phils" aria-hidden="false"></div>
@@ -218,6 +226,15 @@
             <li class="legend__item"><span class="legend__dot legend__dot--eating"></span>eating 🍝</li>
             <li class="legend__item"><span class="legend__dot legend__dot--deadlock"></span>stuck (deadlock)</li>
           </ul>
+
+          <!-- the conceptual heart: deadlock needs ALL FOUR; each fix crosses one out -->
+          <div class="conditions" id="conditions" data-mode="threat">
+            <div class="conditions__head">
+              <h3 class="conditions__title">Why it jams — a deadlock needs <em>all four</em></h3>
+              <span class="conditions__verdict" id="cond-verdict">All four can happen here, so this table can deadlock.</span>
+            </div>
+            <ul class="conditions__list" id="cond-list" aria-live="polite"></ul>
+          </div>
         </div>
 
         <!-- ---- RIGHT: game controls ---- -->
@@ -304,15 +321,6 @@
       </div>
     </section>
   </main>
-
-  <!-- ===================== DEADLOCK BANNER ===================== -->
-  <div id="deadlock-banner" class="deadlock-banner" hidden>
-    <div class="deadlock-banner__inner">
-      <span class="deadlock-banner__stamp">DEADLOCK</span>
-      <p class="deadlock-banner__text">Everyone is holding one fork and waiting for another. Nobody can move! 😵</p>
-      <button class="btn btn--primary js-resolve">🩹 Break the jam</button>
-    </div>
-  </div>
 
   <footer class="site-footer">
     <span>Made with 🍝 to explain locks, mutexes &amp; deadlock.</span>

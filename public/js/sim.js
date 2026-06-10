@@ -47,6 +47,17 @@ export const STRATEGIES = {
   },
 };
 
+// The four Coffman conditions are ALL necessary for deadlock. Each safe strategy
+// structurally removes exactly one. (Mutual exclusion and no-preemption are
+// inherent to "a fork is a lock you must hold and only you may release" — none of
+// these strategies change them; they attack hold-and-wait or circular-wait.)
+export const STRATEGY_BREAKS = {
+  naive:     null,
+  hierarchy: 'circular',   // a total order on forks => no cycle can ever form
+  waiter:    'holdwait',   // both forks atomically, or none => never hold one and wait
+  semaphore: 'circular',   // at most N-1 diners => a gap always remains, no full circle
+};
+
 // A small, fixed cast so philosophers feel like characters, not indices.
 const CAST = [
   { name: 'Plato',     emoji: '🧔🏽' },
@@ -472,6 +483,32 @@ export class Simulation {
     this._emit('resolve', `${victim.name} politely puts down fork(s) ${dropped.join(' & ')} — the jam clears!`, victimId);
   }
 
+  // Live status of the four conditions for deadlock, given the current table
+  // state + strategy. Drives the "why it jams" panel.
+  //   inherent : always true here (mutual exclusion, no preemption)
+  //   armed    : possible under this rule, but not happening right now
+  //   active   : happening in the table right this moment
+  //   broken   : this strategy structurally rules it out
+  conditions() {
+    const broke = STRATEGY_BREAKS[this.strategy];
+    const holdAndWaitNow = this.phils.some(p =>
+      p.phase === 'acquire' && p.held.length > 0 && p.blockedOn && p.blockedOn.kind === 'fork');
+    const circularNow = this.deadlock;          // a real wait-for cycle exists
+    const row = (key, label, desc, breaks, occurring) => {
+      let state;
+      if (breaks === null)         state = 'inherent';
+      else if (broke === breaks)   state = 'broken';
+      else                         state = occurring ? 'active' : 'armed';
+      return { key, label, desc, state, brokenBy: state === 'broken' ? STRATEGIES[this.strategy].name : null };
+    };
+    return [
+      row('mutual',   'Mutual exclusion', 'one diner per fork at a time',          null,       true),
+      row('holdwait', 'Hold and wait',    'holding a fork while waiting for another','holdwait', holdAndWaitNow),
+      row('preempt',  'No preemption',    'nobody is forced to drop a fork',        null,       true),
+      row('circular', 'Circular wait',    'a closed loop, each waiting on the next','circular', circularNow),
+    ];
+  }
+
   // Snapshot for the renderer (cheap, called every frame).
   snapshot() {
     return {
@@ -482,6 +519,7 @@ export class Simulation {
       deadlockCycle: this.deadlockCycle,
       seatsFree: this.seatsFree,
       waiterOwner: this.waiterOwner,
+      conditions: this.conditions(),
       forks: this.forks.map(f => ({ ...f })),
       phils: this.phils.map(p => ({
         ...p,

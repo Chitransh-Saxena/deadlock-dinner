@@ -21,6 +21,7 @@ let timer = null;
 let speed = 2;             // 1..10 (lower = easier to follow along)
 let deadlockCount = 0;
 let sawDeadlock = false;
+let jamSeq = 0;            // cancels the staged "jam it for me" animation if interrupted
 
 const scene = new Scene($('#stage-svg'), $('#stage-phils'), {
   onPhilClick: (id) => {
@@ -49,6 +50,7 @@ function intervalMs() { return Math.round(2400 / speed); }
 
 function play() {
   if (playing) return;
+  jamSeq++;                 // any manual run cancels a pending jam animation
   playing = true;
   $('#btn-play').classList.add('is-playing');
   $('#btn-play .btn__label').textContent = 'Pause';
@@ -91,6 +93,7 @@ function render() {
   scene.update(snap);
   renderStats(snap);
   renderObjective(snap);
+  renderConditions(snap);
   renderLog();
   setStatus();
   // narrator follows the latest meaningful event
@@ -113,7 +116,7 @@ function renderObjective(snap) {
     badge.textContent = '① the problem';
     if (snap.deadlock) {
       obj.dataset.kind = 'jammed';
-      txt.innerHTML = `💥 <b>You jammed it.</b> Every fork is held and everyone’s waiting in a circle — nobody can ever eat. <b>That’s a deadlock.</b> Now go prove a fix →`;
+      txt.innerHTML = `💥 <b>Deadlock — nobody can eat.</b> See why below 👇, then switch to a fix to prevent it →`;
     } else {
       obj.dataset.kind = 'problem';
       txt.innerHTML = `🎯 <b>Jam the table.</b> Click each philosopher to grab a fork — get everyone holding one, then reaching for the next.`;
@@ -129,6 +132,33 @@ function renderObjective(snap) {
     obj.dataset.kind = 'fix';
     badge.textContent = '② prove a fix';
     txt.innerHTML = `🛡️ <b>${s.name}.</b> Same hungry table, one new rule. Click everyone and try to jam it — you can’t.`;
+  }
+}
+
+// ---- the four conditions: live "why it jams" panel -------------------------
+const COND_ICON = { mutual: '🔒', holdwait: '✋', preempt: '⛔', circular: '🔄' };
+const COND_STATE_LABEL = { inherent: 'always', armed: 'possible', active: 'happening', broken: 'blocked' };
+function renderConditions(snap) {
+  const conds = snap.conditions;
+  $('#cond-list').innerHTML = conds.map(c => `
+    <li class="cond cond--${c.state}" data-cond="${c.key}">
+      <span class="cond__icon" aria-hidden="true">${COND_ICON[c.key]}</span>
+      <span class="cond__body"><b class="cond__name">${c.label}</b><small class="cond__desc">${escapeHtml(c.desc)}</small></span>
+      <span class="cond__state">${COND_STATE_LABEL[c.state]}</span>
+    </li>`).join('');
+
+  const panel = $('#conditions');
+  const verdict = $('#cond-verdict');
+  const broken = conds.find(c => c.state === 'broken');
+  if (broken) {
+    panel.dataset.mode = 'safe';
+    verdict.innerHTML = `<b>${broken.brokenBy}</b> removes <b>${broken.label.toLowerCase()}</b> → only 3 of 4 can hold, so this table <b>can’t</b> deadlock.`;
+  } else if (snap.deadlock) {
+    panel.dataset.mode = 'jammed';
+    verdict.innerHTML = `<b>All four are true at once → DEADLOCK.</b> Break any single one and the table flows again.`;
+  } else {
+    panel.dataset.mode = 'threat';
+    verdict.innerHTML = `All four can happen here, so this table <b>can</b> deadlock. Try to make it.`;
   }
 }
 
@@ -223,6 +253,7 @@ function setStatus() {
 // ---- reset / config --------------------------------------------------------
 function resetSim(extra = {}) {
   pause();
+  jamSeq++;                    // cancel any in-flight jam animation
   Object.assign(config, extra);
   sim.reset(config);
   lastEventId = 0;
@@ -254,8 +285,18 @@ function wireControls() {
       return;
     }
     pause();
-    sim.triggerClassicDeadlock();   // everyone grabs their LEFT fork at once…
-    stepOnce();                     // …then all reach for the right → instant jam
+    const my = ++jamSeq;
+    // Beat 1 — everyone grabs their LEFT fork at the same instant (no jam yet).
+    sim.triggerClassicDeadlock();
+    render();
+    flashNarrator('Watch: every philosopher grabs their LEFT fork at the same instant…', 'grab');
+    // Beat 2 — a breath later, each turns to the RIGHT fork… the neighbour has it.
+    setTimeout(() => {
+      if (my !== jamSeq) return;
+      flashNarrator('…now each needs the fork on their RIGHT — but the neighbour won’t let go.', 'warn');
+      // Beat 3 — the circle closes. Deadlock; the table stays visible so you see it.
+      setTimeout(() => { if (my === jamSeq) stepOnce(); }, 1150);
+    }, 1550);
   });
 
   $$('.js-resolve').forEach(b => b.addEventListener('click', () => {
