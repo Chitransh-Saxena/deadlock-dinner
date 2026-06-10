@@ -11,12 +11,14 @@ const $  = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
 // ---- state -----------------------------------------------------------------
-const config = { n: 5, strategy: 'naive', thinkTime: 2, eatTime: 2, autoHunger: true };
+// Manual mode is ON by default: philosophers only get hungry when you click
+// them, so you can read the table and act deliberately.
+const config = { n: 5, strategy: 'naive', thinkTime: 2, eatTime: 2, autoHunger: false };
 const sim = new Simulation(config);
 
 let playing = false;
 let timer = null;
-let speed = 3;             // 1..10 (lower = easier to follow along)
+let speed = 2;             // 1..10 (lower = easier to follow along)
 let deadlockCount = 0;
 let sawDeadlock = false;
 
@@ -29,9 +31,9 @@ const scene = new Scene($('#stage-svg'), $('#stage-phils'), {
 });
 
 // ---- run loop --------------------------------------------------------------
-// Deliberately gentle by default so a human can read each move. speed 1 ≈ 1s
-// per tick, default 3 ≈ 0.8s, max 10 ≈ 0.15s for the impatient.
-function intervalMs() { return Math.round(1100 - speed * 95); }
+// Deliberately gentle. Hyperbolic curve so the slow end is genuinely slow:
+// speed 1 ≈ 2.4s per tick, default 2 ≈ 1.2s, max 10 ≈ 0.24s for the impatient.
+function intervalMs() { return Math.round(2400 / speed); }
 
 function play() {
   if (playing) return;
@@ -234,7 +236,9 @@ function wireControls() {
   // manual mode
   const manualEl = $('#ctl-manual');
   manualEl.addEventListener('change', () => {
-    sim.autoHunger = !manualEl.checked;
+    // keep config in sync so the setting survives resets / strategy changes
+    config.autoHunger = !manualEl.checked;
+    sim.autoHunger = config.autoHunger;
     flashNarrator(manualEl.checked
       ? 'Manual mode: click a philosopher to make them hungry.'
       : 'Auto mode: philosophers get hungry on their own.', 'info');
@@ -439,7 +443,7 @@ function boot() {
   reflectCodeBtns();
   setStatus();
   // gentle intro
-  flashNarrator('Welcome! 5 philosophers, 5 forks. Each needs TWO forks to eat. Press Play ▶', 'info');
+  flashNarrator('Manual mode is on — click a philosopher to make them hungry, then watch them reach for forks. 🍝', 'info');
 }
 
 document.addEventListener('DOMContentLoaded', boot);

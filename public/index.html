@@ -115,10 +115,10 @@
         <div class="learn__try">
           <h3>What to try first 👇</h3>
           <ol>
-            <li>Hit <b>Start the simulation</b>, keep the rule on <b>Naïve</b>, and press <b>💥 Force deadlock</b>. Watch everyone freeze.</li>
-            <li>Press <b>🩹 Break the jam</b> — one philosopher gives up a fork and the table flows again.</li>
+            <li>Hit <b>Start the simulation</b>. You're in <b>Manual mode</b>, so <b>click the philosophers</b> to make them hungry.</li>
+            <li>Keep the rule on <b>Naïve</b> and press <b>💥 Force deadlock</b>. Watch everyone freeze, then <b>🩹 Break the jam</b>.</li>
             <li>Switch the rule to <b>Fork Order</b>, <b>The Waiter</b>, or <b>Limited Seats</b> and try to force a deadlock. You can't! 🎉</li>
-            <li>Turn on <b>Manual mode</b> and click philosophers one-by-one to stage your own deadlock.</li>
+            <li>Turn <b>Manual mode</b> off to let philosophers get hungry on their own.</li>
           </ol>
         </div>
 
@@ -132,37 +132,8 @@
     <section class="panel" data-panel="sim" role="tabpanel">
       <div class="sim-layout">
 
-        <!-- ---- main: narrator + stage ---- -->
-        <div class="sim-main">
-          <div class="sim-toolbar">
-            <button class="sim-toolbar__back" id="back-home">← Back to the story</button>
-            <button class="help-btn" id="btn-help" data-tip="Show me how to use this" aria-label="How to use">?</button>
-          </div>
-
-          <div id="narrator" class="narrator narrator--info">
-            <span class="narrator__icon" aria-hidden="true">📣</span>
-            <span id="narrator-text">Welcome to dinner!</span>
-          </div>
-
-          <div class="stage" id="stage" data-tip="Click any philosopher to make them hungry">
-            <svg id="stage-svg" class="stage__svg" aria-label="Dining table with philosophers and forks"></svg>
-            <div id="stage-phils" class="stage__phils" aria-hidden="false"></div>
-            <p class="stage__hint">👆 Click a philosopher to make them hungry</p>
-          </div>
-
-          <ul class="legend" aria-label="What the colors mean">
-            <li class="legend__item"><span class="legend__dot legend__dot--thinking"></span>thinking</li>
-            <li class="legend__item"><span class="legend__dot legend__dot--hungry"></span>hungry</li>
-            <li class="legend__item"><span class="legend__dot legend__dot--waiting"></span>holding a fork, waiting</li>
-            <li class="legend__item"><span class="legend__dot legend__dot--eating"></span>eating 🍝</li>
-            <li class="legend__item"><span class="legend__dot legend__dot--deadlock"></span>stuck (deadlock)</li>
-          </ul>
-        </div>
-
-        <!-- ---- rail: controls ---- -->
-        <aside class="sim-rail">
-
-          <!-- strategy chooser -->
+        <!-- ---- LEFT: pick a rule + explainer ---- -->
+        <aside class="sim-left">
           <div class="card" id="card-strategy">
             <h2 class="card__title">Pick a rule</h2>
             <p class="card__hint">How do the philosophers decide to grab forks?</p>
@@ -190,7 +161,6 @@
             </div>
           </div>
 
-          <!-- strategy explainer -->
           <div class="card explain">
             <div class="explain__head">
               <h3 id="strat-explain-title" class="explain__title">Naïve — Grab left, then right</h3>
@@ -203,8 +173,37 @@
             </details>
             <div id="strategy-readout" class="readout" hidden></div>
           </div>
+        </aside>
 
-          <!-- transport controls -->
+        <!-- ---- CENTER: narrator + stage ---- -->
+        <div class="sim-center">
+          <div class="sim-toolbar">
+            <button class="sim-toolbar__back" id="back-home">← Back to the story</button>
+            <button class="help-btn" id="btn-help" data-tip="Show me how to use this" aria-label="How to use">?</button>
+          </div>
+
+          <div id="narrator" class="narrator narrator--info">
+            <span class="narrator__icon" aria-hidden="true">📣</span>
+            <span id="narrator-text">Welcome to dinner!</span>
+          </div>
+
+          <div class="stage" id="stage" data-tip="Click any philosopher to make them hungry">
+            <svg id="stage-svg" class="stage__svg" aria-label="Dining table with philosophers and forks"></svg>
+            <div id="stage-phils" class="stage__phils" aria-hidden="false"></div>
+            <p class="stage__hint">👆 Click a philosopher to make them hungry</p>
+          </div>
+
+          <ul class="legend" aria-label="What the colors mean">
+            <li class="legend__item"><span class="legend__dot legend__dot--thinking"></span>thinking</li>
+            <li class="legend__item"><span class="legend__dot legend__dot--hungry"></span>hungry</li>
+            <li class="legend__item"><span class="legend__dot legend__dot--waiting"></span>holding a fork, waiting</li>
+            <li class="legend__item"><span class="legend__dot legend__dot--eating"></span>eating 🍝</li>
+            <li class="legend__item"><span class="legend__dot legend__dot--deadlock"></span>stuck (deadlock)</li>
+          </ul>
+        </div>
+
+        <!-- ---- RIGHT: game controls ---- -->
+        <aside class="sim-right">
           <div class="card" id="card-controls">
             <div class="controls">
               <button id="btn-play" class="btn btn--primary" data-tip="Run it (or press Space)">
@@ -223,11 +222,10 @@
             </div>
           </div>
 
-          <!-- sliders -->
           <div class="card sliders" id="card-sliders">
             <label class="slider" data-tip="How fast the simulation runs. Lower = easier to follow">
-              <span class="slider__label">Speed <b id="ctl-speed-val">3</b></span>
-              <input id="ctl-speed" type="range" min="1" max="10" value="3" />
+              <span class="slider__label">Speed <b id="ctl-speed-val">2</b></span>
+              <input id="ctl-speed" type="range" min="1" max="10" value="2" />
             </label>
             <label class="slider" data-tip="How many philosophers sit at the table (3–7)">
               <span class="slider__label">Philosophers <b id="ctl-n-val">5</b></span>
@@ -242,13 +240,12 @@
               <input id="ctl-eat" type="range" min="1" max="8" value="2" />
             </label>
             <label class="toggle" data-tip="Philosophers only get hungry when YOU click them">
-              <input id="ctl-manual" type="checkbox" />
+              <input id="ctl-manual" type="checkbox" checked />
               <span class="toggle__track"><span class="toggle__thumb"></span></span>
               <span class="toggle__label">Manual mode <small>(only eat when clicked)</small></span>
             </label>
           </div>
 
-          <!-- stats -->
           <div class="card stats">
             <div class="stat"><span class="stat__num" id="stat-tick">0</span><span class="stat__lbl">ticks</span></div>
             <div class="stat"><span class="stat__num" id="stat-meals">0</span><span class="stat__lbl">meals</span></div>
@@ -264,7 +261,6 @@
             <h3 class="card__title">Live event log</h3>
             <ul id="log" class="log" aria-live="polite"></ul>
           </div>
-
         </aside>
       </div>
     </section>
