@@ -113,12 +113,11 @@
         </div>
 
         <div class="learn__try">
-          <h3>What to try first 👇</h3>
+          <h3>The game, in 3 steps 👇</h3>
           <ol>
-            <li>Hit <b>Start the simulation</b>. You're in <b>Manual mode</b>, so <b>click the philosophers</b> to make them hungry.</li>
-            <li>Keep the rule on <b>Naïve</b> and press <b>💥 Force deadlock</b>. Watch everyone freeze, then <b>🩹 Break the jam</b>.</li>
-            <li>Switch the rule to <b>Fork Order</b>, <b>The Waiter</b>, or <b>Limited Seats</b> and try to force a deadlock. You can't! 🎉</li>
-            <li>Turn <b>Manual mode</b> off to let philosophers get hungry on their own.</li>
+            <li><b>Cause it.</b> On the <b>Naïve</b> rule, <b>click each philosopher</b> to hand them a fork. Give everyone their <i>first</i> fork, then reach for the <i>second</i>…</li>
+            <li><b>Feel it.</b> 💥 The table locks solid — every fork held, everyone waiting in a circle, nobody can eat. <b>You built a deadlock with your own hands.</b></li>
+            <li><b>Fix it.</b> ✅ Switch to <b>Fork Order</b>, <b>The Waiter</b>, or <b>Limited Seats</b> and try the exact same thing. It <i>won't</i> jam — and the game tells you which rule broke which condition.</li>
           </ol>
         </div>
 
@@ -135,29 +134,42 @@
         <!-- ---- LEFT: pick a rule + explainer ---- -->
         <aside class="sim-left">
           <div class="card" id="card-strategy">
-            <h2 class="card__title">Pick a rule</h2>
-            <p class="card__hint">How do the philosophers decide to grab forks?</p>
-            <div class="strat-cards">
-              <button class="strat-card is-active" data-strat="naive" data-tip="Grab left fork, then right — can deadlock!">
-                <span class="strat-card__emoji">🙈</span>
-                <span class="strat-card__name">Naïve</span>
-                <span class="strat-card__tag danger">can deadlock</span>
-              </button>
-              <button class="strat-card" data-strat="hierarchy" data-tip="Always grab the lower-numbered fork first">
-                <span class="strat-card__emoji">🔢</span>
-                <span class="strat-card__name">Fork Order</span>
-                <span class="strat-card__tag safe">safe</span>
-              </button>
-              <button class="strat-card" data-strat="waiter" data-tip="A waiter only lets you take both forks at once">
-                <span class="strat-card__emoji">🤵</span>
-                <span class="strat-card__name">The Waiter</span>
-                <span class="strat-card__tag safe">safe</span>
-              </button>
-              <button class="strat-card" data-strat="semaphore" data-tip="Only N−1 may sit and try at the same time">
-                <span class="strat-card__emoji">🪑</span>
-                <span class="strat-card__name">Limited Seats</span>
-                <span class="strat-card__tag safe">safe</span>
-              </button>
+            <h2 class="card__title">How to play</h2>
+            <p class="card__hint">First <b>cause</b> a deadlock by hand. Then <b>prove</b> how each rule prevents it.</p>
+
+            <div class="strat-group">
+              <span class="strat-group__label"><span class="strat-group__no">①</span> The problem</span>
+              <div class="strat-cards strat-cards--list">
+                <button class="strat-card is-active" data-strat="naive" data-tip="Grab left, then right — the only rule that can deadlock">
+                  <span class="strat-card__emoji">🙈</span>
+                  <span class="strat-card__name">Naïve</span>
+                  <span class="strat-card__tag danger">can deadlock</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="strat-group">
+              <span class="strat-group__label"><span class="strat-group__no">②</span> Prove a fix <small class="strat-group__count" id="proven-count">0/3</small></span>
+              <div class="strat-cards strat-cards--list">
+                <button class="strat-card" data-strat="hierarchy" data-tip="Always grab the lower-numbered fork first — breaks the circular wait">
+                  <span class="strat-card__emoji">🔢</span>
+                  <span class="strat-card__name">Fork Order</span>
+                  <span class="strat-card__tag safe">breaks the circle</span>
+                  <span class="strat-card__check" aria-hidden="true">✓</span>
+                </button>
+                <button class="strat-card" data-strat="waiter" data-tip="Only pick up both forks at once — never holds one and waits">
+                  <span class="strat-card__emoji">🤵</span>
+                  <span class="strat-card__name">The Waiter</span>
+                  <span class="strat-card__tag safe">both-or-none</span>
+                  <span class="strat-card__check" aria-hidden="true">✓</span>
+                </button>
+                <button class="strat-card" data-strat="semaphore" data-tip="At most N−1 try at once — always leaves a gap in the circle">
+                  <span class="strat-card__emoji">🪑</span>
+                  <span class="strat-card__name">Limited Seats</span>
+                  <span class="strat-card__tag safe">leaves a gap</span>
+                  <span class="strat-card__check" aria-hidden="true">✓</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -182,15 +194,21 @@
             <button class="help-btn" id="btn-help" data-tip="Show me how to use this" aria-label="How to use">?</button>
           </div>
 
+          <div id="objective" class="objective" data-kind="problem">
+            <span id="objective-badge" class="objective__badge">① the problem</span>
+            <span id="objective-text" class="objective__text">Jam the table — click each philosopher to grab a fork.</span>
+            <span id="objective-progress" class="objective__progress">fixes proven · 0/3</span>
+          </div>
+
           <div id="narrator" class="narrator narrator--info">
             <span class="narrator__icon" aria-hidden="true">📣</span>
             <span id="narrator-text">Welcome to dinner!</span>
           </div>
 
-          <div class="stage" id="stage" data-tip="Click any philosopher to make them hungry">
+          <div class="stage" id="stage" data-tip="Click a philosopher to pick up a fork">
             <svg id="stage-svg" class="stage__svg" aria-label="Dining table with philosophers and forks"></svg>
             <div id="stage-phils" class="stage__phils" aria-hidden="false"></div>
-            <p class="stage__hint">👆 Click a philosopher to make them hungry</p>
+            <p class="stage__hint">👆 Click a philosopher to pick up a fork</p>
           </div>
 
           <ul class="legend" aria-label="What the colors mean">
@@ -217,7 +235,7 @@
               </button>
             </div>
             <div class="controls controls--danger">
-              <button id="btn-deadlock" class="btn btn--ghost-danger" data-tip="Make everyone grab a fork at once → watch it freeze">💥 Force deadlock</button>
+              <button id="btn-deadlock" class="btn btn--ghost-danger btn--shortcut" data-tip="In a hurry? Grab every fork at once and freeze the table — no clicking">⚡ Jam it for me</button>
               <button id="btn-resolve" class="btn btn--ghost-safe js-resolve" data-tip="One philosopher puts a fork down to unstick the table">🩹 Break the jam</button>
             </div>
           </div>
@@ -231,7 +249,7 @@
               <span class="slider__label">Philosophers <b id="ctl-n-val">5</b></span>
               <input id="ctl-n" type="range" min="3" max="7" value="5" />
             </label>
-            <label class="slider" data-tip="How long each philosopher thinks before getting hungry">
+            <label class="slider" data-tip="How long a philosopher thinks before auto-getting hungry">
               <span class="slider__label">Think time <b id="ctl-think-val">2</b></span>
               <input id="ctl-think" type="range" min="1" max="8" value="2" />
             </label>
@@ -239,7 +257,7 @@
               <span class="slider__label">Eat time <b id="ctl-eat-val">2</b></span>
               <input id="ctl-eat" type="range" min="1" max="8" value="2" />
             </label>
-            <label class="toggle" data-tip="Philosophers only get hungry when YOU click them">
+            <label class="toggle" data-tip="Manual mode: philosophers move only when you click them to grab forks">
               <input id="ctl-manual" type="checkbox" checked />
               <span class="toggle__track"><span class="toggle__thumb"></span></span>
               <span class="toggle__label">Manual mode <small>(only eat when clicked)</small></span>

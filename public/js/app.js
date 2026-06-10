@@ -24,11 +24,23 @@ let sawDeadlock = false;
 
 const scene = new Scene($('#stage-svg'), $('#stage-phils'), {
   onPhilClick: (id) => {
-    sim.makeHungry(id);
-    flashNarrator(`You nudged ${sim.phils[id].name} — they’re reaching for forks!`, 'hungry');
-    render();
+    const before = sim.deadlock;
+    const status = sim.nudge(id);          // one click = pick up one fork
+    if (sim.deadlock && !before) { deadlockCount++; sawDeadlock = true; onDeadlock(); }
+    render();                              // narrates the grab via the latest event
+    if (status === 'busy') flashNarrator(`${sim.phils[id].name} is eating — let them finish. 🍝`, 'eat');
   },
 });
+
+// ---- game progress ---------------------------------------------------------
+// Which safe rules the player has personally watched survive a full table.
+const provenFixes = new Set();
+let sawFullContention = false;   // every philosopher reaching for forks at once
+const PROOF_WHY = {
+  hierarchy: 'numbering the forks kills the circular wait.',
+  waiter:    'grabbing both-or-none kills hold-and-wait.',
+  semaphore: 'the empty chair leaves a gap in the circle.',
+};
 
 // ---- run loop --------------------------------------------------------------
 // Deliberately gentle. Hyperbolic curve so the slow end is genuinely slow:
@@ -78,6 +90,7 @@ function render() {
   const snap = sim.snapshot();
   scene.update(snap);
   renderStats(snap);
+  renderObjective(snap);
   renderLog();
   setStatus();
   // narrator follows the latest meaningful event
@@ -85,6 +98,53 @@ function render() {
   if (ev && ev.id !== lastEventId) {
     lastEventId = ev.id;
     if (ev.kind !== 'system') flashNarrator(ev.text, ev.kind);
+  }
+  maybeProve(snap);   // last, so a "fix proven!" message wins the narrator
+}
+
+// ---- objective bar: states the goal for the current rule --------------------
+function renderObjective(snap) {
+  const obj = $('#objective');
+  const badge = $('#objective-badge');
+  const txt = $('#objective-text');
+  $('#objective-progress').textContent = `fixes proven · ${provenFixes.size}/3`;
+
+  if (snap.strategy === 'naive') {
+    badge.textContent = '① the problem';
+    if (snap.deadlock) {
+      obj.dataset.kind = 'jammed';
+      txt.innerHTML = `💥 <b>You jammed it.</b> Every fork is held and everyone’s waiting in a circle — nobody can ever eat. <b>That’s a deadlock.</b> Now go prove a fix →`;
+    } else {
+      obj.dataset.kind = 'problem';
+      txt.innerHTML = `🎯 <b>Jam the table.</b> Click each philosopher to grab a fork — get everyone holding one, then reaching for the next.`;
+    }
+    return;
+  }
+  const s = STRATEGIES[snap.strategy];
+  if (provenFixes.has(snap.strategy)) {
+    obj.dataset.kind = 'proven';
+    badge.textContent = '✓ fix proven';
+    txt.innerHTML = `✅ <b>${s.name} holds</b> — ${PROOF_WHY[snap.strategy]} Try another fix, or go back to Naïve.`;
+  } else {
+    obj.dataset.kind = 'fix';
+    badge.textContent = '② prove a fix';
+    txt.innerHTML = `🛡️ <b>${s.name}.</b> Same hungry table, one new rule. Click everyone and try to jam it — you can’t.`;
+  }
+}
+
+// ---- proof: the player watched a safe rule survive a full, contended table --
+function maybeProve(snap) {
+  if (snap.phils.every(p => p.display !== PSTATE.THINKING)) sawFullContention = true;
+  const s = STRATEGIES[snap.strategy];
+  if (!s.safe || provenFixes.has(snap.strategy)) return;
+  // Proven once you've reproduced the naive failure setup — everyone reaching at
+  // once — and yet the table kept flowing (someone ate, nobody deadlocked).
+  if (sawFullContention && !snap.deadlock && snap.totalMeals > 0) {
+    provenFixes.add(snap.strategy);
+    $(`.strat-card[data-strat="${snap.strategy}"]`)?.classList.add('is-proven');
+    $('#proven-count').textContent = `${provenFixes.size}/3`;
+    renderObjective(snap);
+    flashNarrator(`✅ Proven: ${s.name} can’t deadlock — ${PROOF_WHY[snap.strategy]}`, 'eat');
   }
 }
 
@@ -166,6 +226,7 @@ function resetSim(extra = {}) {
   Object.assign(config, extra);
   sim.reset(config);
   lastEventId = 0;
+  sawFullContention = false;   // proof must be re-earned on a fresh table
   clearDeadlockUI();
   scene.rebuildLayout(sim.n);
   render();
@@ -189,13 +250,12 @@ function wireControls() {
 
   $('#btn-deadlock').addEventListener('click', () => {
     if (sim.strategy !== 'naive') {
-      flashNarrator(`The “${STRATEGIES[sim.strategy].name}” rule prevents deadlock — switch to Naïve to see one!`, 'warn');
+      flashNarrator(`The “${STRATEGIES[sim.strategy].name}” rule can’t deadlock — that’s the point! Switch to Naïve to cause one.`, 'warn');
       return;
     }
     pause();
-    sim.triggerClassicDeadlock();
-    render();                 // shows everyone holding their left fork
-    flashNarrator('Everyone grabbed their LEFT fork at once. Press Step or Play…', 'warn');
+    sim.triggerClassicDeadlock();   // everyone grabs their LEFT fork at once…
+    stepOnce();                     // …then all reach for the right → instant jam
   });
 
   $$('.js-resolve').forEach(b => b.addEventListener('click', () => {
@@ -310,11 +370,11 @@ function switchTab(name) {
 //  Guided tour (coachmarks)
 // ============================================================================
 const TOUR_STEPS = [
-  { sel: '#card-strategy', title: 'Pick a rule',        body: "Choose how the philosophers grab forks. ‘Naïve’ can get stuck — the other three are deadlock-free." },
-  { sel: '#card-controls', title: 'Play, or step',      body: "Press Play to run it slowly, or Step to move one tick at a time so you can read every move." },
-  { sel: '#btn-deadlock',  title: 'Make a deadlock',    body: "On the Naïve rule, this makes everyone grab a fork at once — and the whole table freezes. ‘Break the jam’ frees it." },
-  { sel: '#stage',         title: 'Click a philosopher', body: "Tap anyone at the table to make them hungry and reach for forks. Try it!" },
-  { sel: '#card-sliders',  title: 'Turn the dials',     body: "Slow things down, add or remove philosophers, and change how long they think and eat." },
+  { sel: '#objective',     title: 'Your mission',         body: "This bar always tells you the goal. Right now: cause a deadlock on the Naïve rule." },
+  { sel: '#stage',         title: 'Click to grab a fork', body: "Tap a philosopher to pick up ONE fork. Give everyone their first fork, then reach for the second — and the table jams. You just built a deadlock!" },
+  { sel: '#card-strategy', title: 'Cause it, then fix it', body: "① Jam the table on Naïve. ② Then switch to a fix and try the same thing — it won’t jam, and the game shows you why." },
+  { sel: '#card-controls', title: 'Play, step, or skip',  body: "Play and Step run the table on their own. In a hurry? ‘⚡ Jam it for me’ grabs every fork at once; ‘🩹 Break the jam’ frees a stuck table." },
+  { sel: '#card-sliders',  title: 'Turn the dials',       body: "Slow things down, add or remove philosophers, and switch Manual mode off to let them get hungry on their own." },
 ];
 let tourIdx = 0;
 let tourEls = null;
@@ -442,8 +502,8 @@ function boot() {
   render();
   reflectCodeBtns();
   setStatus();
-  // gentle intro
-  flashNarrator('Manual mode is on — click a philosopher to make them hungry, then watch them reach for forks. 🍝', 'info');
+  // gentle intro — lead with the goal
+  flashNarrator('Your goal: jam the table. Click a philosopher to grab a fork — get everyone holding one, then reaching for the next. 🍝', 'info');
 }
 
 document.addEventListener('DOMContentLoaded', boot);

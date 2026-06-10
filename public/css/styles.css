@@ -233,6 +233,26 @@ a { color: var(--tomato-deep); }
   background: none; border: 0; cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; padding: .2rem; }
 .sim-toolbar__back:hover { color: var(--tomato-deep); }
 
+/* ---- objective bar (the goal, always visible) ---- */
+.objective { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap;
+  padding: .65rem .9rem; border-radius: var(--radius);
+  background: var(--card); border: 2.5px solid var(--ink); box-shadow: var(--hard);
+  border-left-width: 9px; transition: border-color .3s, background .3s; }
+.objective__badge { font-family: var(--font-mono); font-size: .6rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--paper); background: var(--ink);
+  padding: .28rem .6rem; border-radius: 999px; white-space: nowrap; flex: 0 0 auto; }
+.objective__text { font-family: var(--font-serif); font-size: 1.02rem; color: var(--ink); flex: 1 1 200px; min-width: 0; }
+.objective__text b { font-family: var(--font-ui); font-weight: 700; }
+.objective__progress { font-family: var(--font-mono); font-size: .7rem; font-weight: 700;
+  color: var(--ink-soft); white-space: nowrap; flex: 0 0 auto; }
+.objective[data-kind="problem"] { border-left-color: var(--tomato); }
+.objective[data-kind="jammed"]  { border-left-color: var(--tomato); background: #fbeee9; }
+.objective[data-kind="jammed"] .objective__badge { background: var(--tomato); }
+.objective[data-kind="fix"]     { border-left-color: var(--denim); }
+.objective[data-kind="fix"] .objective__badge { background: var(--denim); }
+.objective[data-kind="proven"]  { border-left-color: var(--pine); background: #eef6f0; }
+.objective[data-kind="proven"] .objective__badge { background: var(--pine); }
+
 /* ---- narrator ---- */
 .narrator {
   display: flex; align-items: center; gap: .75rem;
@@ -362,6 +382,30 @@ a { color: var(--tomato-deep); }
 .strat-card__tag.danger { color: var(--paper); background: var(--tomato); }
 .strat-card__tag.safe   { color: var(--paper); background: var(--pine); }
 
+/* problem / fix groups (the game arc, in the rule picker) */
+.strat-group + .strat-group { margin-top: .9rem; }
+.strat-group__label { display: flex; align-items: center; gap: .45rem; margin-bottom: .5rem;
+  font-family: var(--font-mono); font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--ink-soft); }
+.strat-group__no { display: grid; place-items: center; width: 19px; height: 19px; flex: 0 0 auto;
+  border-radius: 50%; background: var(--ink); color: var(--paper); font-size: .64rem; }
+.strat-group__count { margin-left: auto; color: var(--pine); font-size: .72rem; }
+
+/* vertical "level rail" layout for the fixes */
+.strat-cards--list { grid-template-columns: 1fr; gap: .45rem; }
+.strat-cards--list .strat-card { flex-direction: row; align-items: center; gap: .55rem; padding: .55rem .7rem; }
+.strat-cards--list .strat-card__name { flex: 1 1 auto; }
+.strat-card__check { display: none; flex: 0 0 auto; width: 21px; height: 21px; border-radius: 50%;
+  background: var(--pine); color: var(--paper); place-items: center; font-size: .74rem; font-weight: 800;
+  border: 2px solid var(--ink); box-shadow: var(--hard-sm); }
+.strat-card.is-proven { background: #eef6f0; }
+.strat-card.is-proven.is-active { background: var(--saffron); }
+.strat-card.is-proven .strat-card__check { display: grid; }
+.strat-card.is-proven .strat-card__tag.safe { background: var(--ink-soft); }
+
+/* the demoted "jam it for me" shortcut reads quieter than the hands-on path */
+.btn--shortcut { flex: 0 0 auto; font-size: .82rem; padding: .5rem .8rem; opacity: .9; }
+
 /* explainer */
 .explain__head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-bottom: .5rem; }
 .explain__title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; margin: 0; }
@@ -461,6 +505,39 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius
 .log__item--deadlock .log__text { color: var(--tomato); font-weight: 700; }
 .log::-webkit-scrollbar { width: 9px; }
 .log::-webkit-scrollbar-thumb { background: var(--ink-faint); border-radius: 999px; }
+
+/* ==================== density pass ====================
+   Keep the simulation ("game") page from feeling chonky: tighter gaps and
+   padding, lighter card shadows. Scoped under .sim-layout so the Home and Code
+   pages keep their full, roomy treatment. */
+.sim-layout { gap: .85rem; }
+.sim-layout .sim-left, .sim-layout .sim-right, .sim-layout .sim-center { gap: .7rem; }
+
+.sim-layout .card { padding: .8rem .85rem; border-width: 2px; box-shadow: var(--hard-sm); }
+.sim-layout .card__title { font-size: 1rem; }
+.sim-layout .card__hint { margin-bottom: .5rem; }
+
+.sim-layout .objective { padding: .5rem .78rem; border-width: 2px; border-left-width: 8px; box-shadow: var(--hard-sm); }
+.sim-layout .objective__text { font-size: .93rem; }
+.sim-layout .objective__badge { font-size: .58rem; padding: .22rem .5rem; }
+
+.sim-layout .narrator { padding: .58rem .85rem; min-height: 44px; border-width: 2px; box-shadow: var(--hard-sm); font-size: .98rem; }
+.sim-layout .narrator__icon { font-size: 1.1rem; width: 32px; height: 32px; }
+
+.sim-layout .controls { gap: .4rem; }
+.sim-layout .controls + .controls { margin-top: .45rem; }
+.sim-layout .btn { padding: .5rem .6rem; font-size: .9rem; }
+
+.sim-layout .sliders { gap: .65rem; }
+.sim-layout .stats { gap: .4rem; }
+.sim-layout .stat { padding: .42rem 0; }
+.sim-layout .stat__num { font-size: 1.5rem; }
+.sim-layout .meal-bars { gap: .35rem; }
+.sim-layout .log { max-height: 158px; }
+.sim-layout .legend { padding-top: .5rem; }
+
+.sim-layout .strat-group + .strat-group { margin-top: .7rem; }
+.sim-layout .strat-cards--list .strat-card { padding: .5rem .62rem; }
 
 /* ==================== code panel ==================== */
 .code-wrap { background: var(--card); border: 2.5px solid var(--ink); border-radius: var(--radius);

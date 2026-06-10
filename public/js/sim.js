@@ -157,6 +157,32 @@ export class Simulation {
     }
   }
 
+  // Hands-on play: ONE click = pick up ONE fork. This is the whole point — the
+  // player builds the deadlock with their own hands instead of pressing a button
+  // (the "generation effect": you remember what you make yourself). Wakes a
+  // thinking philosopher and reaches for their first fork now; a second click
+  // reaches for the next — and either eats, or gets stuck (which, done to all
+  // five, IS the classic circular-wait deadlock). Eating philosophers ignore it.
+  // Returns a status the UI can react to: 'grabbed' | 'eating' | 'blocked' | 'busy' | 'none'.
+  nudge(id) {
+    if (this.deadlock) return 'none';
+    const p = this.phils[id];
+    if (p.phase === 'eat') return 'busy';
+    if (p.phase === 'think') {
+      p.phase = 'acquire';
+      p.blockedOn = null;
+      p.timer = 0;
+      this._emit('hungry', `${p.name} is hungry and reaches in.`, id);
+    }
+    const heldBefore = p.held.length;
+    this._stepAcquire(p);     // one acquisition attempt under the current rule
+    this._detectDeadlock();
+    if (p.phase === 'eat')              return 'eating';
+    if (p.held.length > heldBefore)     return 'grabbed';
+    if (p.blockedOn)                    return 'blocked';
+    return 'grabbed';
+  }
+
   // Force the classic textbook deadlock: every philosopher simultaneously
   // grabs their LEFT fork (all distinct, so all succeed), then each is left
   // waiting on a neighbour's fork → a perfect circular wait.
