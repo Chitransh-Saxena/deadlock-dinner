@@ -194,6 +194,30 @@ export class Simulation {
     return 'grabbed';
   }
 
+  // Does every philosopher currently hold their own LEFT fork? That's the moment
+  // the classic deadlock is one reach away — every right fork is now a neighbour's left.
+  everyoneHoldsLeft() {
+    return this.phils.every(p => p.held.includes(this.leftFork(p.id)));
+  }
+
+  // Phase 1 of building the classic deadlock by hand: pick up ONLY the left fork.
+  // Crucially this never reaches for the right fork, so clicking in ANY order (or
+  // clicking the same philosopher twice) can't let someone "eat their way out" —
+  // everyone simply ends up holding their left fork, the exact setup for the jam.
+  grabLeft(id) {
+    if (this.deadlock) return 'none';
+    const p = this.phils[id];
+    if (p.phase === 'eat') return 'busy';
+    if (p.phase === 'think') {
+      p.phase = 'acquire'; p.blockedOn = null; p.timer = 0;
+      this._emit('hungry', `${p.name} is hungry and reaches in.`, id);
+    }
+    const lf = this.leftFork(p.id);
+    if (p.held.includes(lf)) return 'holding';      // already has their left — wait for phase 2
+    if (this._grab(p, lf)) { p.blockedOn = null; p.message = 'Got one fork — now I need the other.'; return 'grabbed'; }
+    p.blockedOn = { kind: 'fork', id: lf }; return 'blocked';
+  }
+
   // Force the classic textbook deadlock: every philosopher simultaneously
   // grabs their LEFT fork (all distinct, so all succeed), then each is left
   // waiting on a neighbour's fork → a perfect circular wait.
@@ -277,7 +301,7 @@ export class Simulation {
       p.timer = this._rand(this.thinkTime);
       p.blockedOn = null;
       p.message = 'Mmm, that was good. Back to thinking.';
-      this._emit('done', `${p.name} finished eating and put down forks ${dropped.join(' & ')}.`, p.id);
+      this._emit('done', `${p.name} finished eating and set their forks down.`, p.id);
     }
   }
 
@@ -287,7 +311,7 @@ export class Simulation {
     if (this.forks[fid].owner === null) {
       this.forks[fid].owner = p.id;
       p.held.push(fid);
-      this._emit('grab', `${p.name} picks up fork ${fid}.`, p.id);
+      this._emit('grab', `${p.name} picks up a fork.`, p.id);
       return true;
     }
     return false;
@@ -323,11 +347,11 @@ export class Simulation {
     if (!p.held.includes(first)) {
       if (this._grab(p, first)) {
         p.blockedOn = null;
-        p.message = `Got fork ${first}. Now I need fork ${second}.`;
+        p.message = 'Got one fork — now I need the other.';
       } else {
         p.blockedOn = { kind: 'fork', id: first };
         p.waitTicks++;
-        p.message = `Waiting for fork ${first}…`;
+        p.message = 'Waiting for a fork…';
       }
       return;
     }
@@ -337,7 +361,7 @@ export class Simulation {
       } else {
         p.blockedOn = { kind: 'fork', id: second };
         p.waitTicks++;
-        p.message = `Holding fork ${first}, stuck waiting for fork ${second}…`;
+        p.message = 'Holding one fork, stuck waiting for the other…';
       }
       return;
     }
@@ -480,7 +504,8 @@ export class Simulation {
     victim.message = 'Okay, I’ll put my fork down so someone else can eat.';
     this.deadlock = false;
     this.deadlockCycle = [];
-    this._emit('resolve', `${victim.name} politely puts down fork(s) ${dropped.join(' & ')} — the jam clears!`, victimId);
+    void dropped;
+    this._emit('resolve', `${victim.name} sets a fork down — that one release breaks the circle.`, victimId);
   }
 
   // Live status of the four conditions for deadlock, given the current table

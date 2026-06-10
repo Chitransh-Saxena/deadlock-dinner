@@ -252,50 +252,53 @@
               </button>
             </div>
             <div class="controls controls--danger">
-              <button id="btn-deadlock" class="btn btn--ghost-danger btn--shortcut" data-tip="In a hurry? Grab every fork at once and freeze the table — no clicking">⚡ Jam it for me</button>
+              <button id="btn-deadlock" class="btn btn--ghost-danger btn--shortcut" data-tip="In a hurry? Build the whole jam at once — no clicking">⚡ Jam it for me</button>
               <button id="btn-resolve" class="btn btn--ghost-safe js-resolve" data-tip="One philosopher puts a fork down to unstick the table">🩹 Break the jam</button>
             </div>
-          </div>
-
-          <div class="card sliders" id="card-sliders">
-            <label class="slider" data-tip="How fast the simulation runs. Lower = easier to follow">
-              <span class="slider__label">Speed <b id="ctl-speed-val">2</b></span>
-              <input id="ctl-speed" type="range" min="1" max="10" value="2" />
-            </label>
-            <label class="slider" data-tip="How many philosophers sit at the table (3–7)">
-              <span class="slider__label">Philosophers <b id="ctl-n-val">5</b></span>
-              <input id="ctl-n" type="range" min="3" max="7" value="5" />
-            </label>
-            <label class="slider" data-tip="How long a philosopher thinks before auto-getting hungry">
-              <span class="slider__label">Think time <b id="ctl-think-val">2</b></span>
-              <input id="ctl-think" type="range" min="1" max="8" value="2" />
-            </label>
-            <label class="slider" data-tip="How long a philosopher eats before putting forks down">
-              <span class="slider__label">Eat time <b id="ctl-eat-val">2</b></span>
-              <input id="ctl-eat" type="range" min="1" max="8" value="2" />
-            </label>
             <label class="toggle" data-tip="Manual mode: philosophers move only when you click them to grab forks">
               <input id="ctl-manual" type="checkbox" checked />
               <span class="toggle__track"><span class="toggle__thumb"></span></span>
-              <span class="toggle__label">Manual mode <small>(only eat when clicked)</small></span>
+              <span class="toggle__label">Manual mode <small>(click to grab)</small></span>
             </label>
           </div>
 
           <div class="card stats">
-            <div class="stat"><span class="stat__num" id="stat-tick">0</span><span class="stat__lbl">ticks</span></div>
             <div class="stat"><span class="stat__num" id="stat-meals">0</span><span class="stat__lbl">meals</span></div>
             <div class="stat"><span class="stat__num stat__num--danger" id="stat-deadlocks">0</span><span class="stat__lbl">deadlocks</span></div>
+            <div class="stat"><span class="stat__num" id="stat-tick">0</span><span class="stat__lbl">ticks</span></div>
           </div>
 
-          <div class="card">
-            <h3 class="card__title">Meals eaten</h3>
-            <div id="meal-bars" class="meal-bars"></div>
-          </div>
-
-          <div class="card">
-            <h3 class="card__title">Live event log</h3>
-            <ul id="log" class="log" aria-live="polite"></ul>
-          </div>
+          <details class="adv" id="adv">
+            <summary class="adv__summary">⚙ Tinker &amp; details <small>speed · table size · event log</small></summary>
+            <div class="adv__body">
+              <div class="card sliders" id="card-sliders">
+                <label class="slider" data-tip="How fast the simulation runs. Lower = easier to follow">
+                  <span class="slider__label">Speed <b id="ctl-speed-val">2</b></span>
+                  <input id="ctl-speed" type="range" min="1" max="10" value="2" />
+                </label>
+                <label class="slider" data-tip="How many philosophers sit at the table (3–7)">
+                  <span class="slider__label">Philosophers <b id="ctl-n-val">5</b></span>
+                  <input id="ctl-n" type="range" min="3" max="7" value="5" />
+                </label>
+                <label class="slider" data-tip="How long a philosopher thinks before auto-getting hungry">
+                  <span class="slider__label">Think time <b id="ctl-think-val">2</b></span>
+                  <input id="ctl-think" type="range" min="1" max="8" value="2" />
+                </label>
+                <label class="slider" data-tip="How long a philosopher eats before putting forks down">
+                  <span class="slider__label">Eat time <b id="ctl-eat-val">2</b></span>
+                  <input id="ctl-eat" type="range" min="1" max="8" value="2" />
+                </label>
+              </div>
+              <div class="card">
+                <h3 class="card__title">Meals eaten</h3>
+                <div id="meal-bars" class="meal-bars"></div>
+              </div>
+              <div class="card">
+                <h3 class="card__title">Live event log</h3>
+                <ul id="log" class="log" aria-live="polite"></ul>
+              </div>
+            </div>
+          </details>
         </aside>
       </div>
     </section>

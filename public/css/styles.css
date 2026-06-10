@@ -611,6 +611,29 @@ body.is-deadlock::after { content: ''; position: fixed; inset: 0; pointer-events
 .cond--broken .cond__name { text-decoration: line-through; text-decoration-color: var(--pine); color: var(--ink-soft); }
 .cond--broken .cond__state { background: var(--pine); }
 @media (max-width: 520px) { .conditions__list { grid-template-columns: 1fr; } }
+/* teaser state (before the first jam) + the reveal flash */
+.conditions[data-mode="teaser"] { border-style: dashed; }
+.conditions[data-mode="teaser"] .conditions__verdict { color: var(--ink-faint); font-style: italic; }
+.conditions.reveal { animation: condReveal .6s cubic-bezier(.2,1.2,.4,1); }
+@keyframes condReveal { 0% { transform: scale(.985); } 45% { transform: scale(1.012); } 100% { transform: none; } }
+
+/* "tap me" affordance — only at the very start (manual mode, nothing grabbed yet) */
+.stage.await-first .phil--thinking .phil__avatar { animation: tapPulse 1.6s ease-in-out infinite; }
+.stage.await-first .phil--thinking .phil__ring { border-color: var(--saffron); }
+@keyframes tapPulse { 0%,100% { box-shadow: var(--hard-sm); } 50% { box-shadow: 0 0 0 5px rgba(230,160,25,.4), var(--hard-sm); } }
+
+/* progressive-disclosure "Tinker" panel (expert controls, collapsed by default) */
+.adv { border: 0; }
+.adv__summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; gap: .5rem;
+  font-family: var(--font-ui); font-weight: 700; font-size: .85rem; color: var(--ink-soft);
+  background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius-sm);
+  box-shadow: var(--hard-sm); padding: .55rem .8rem; transition: background .15s; }
+.adv__summary::-webkit-details-marker { display: none; }
+.adv__summary small { color: var(--ink-faint); font-weight: 600; font-family: var(--font-serif); font-style: italic; }
+.adv__summary::after { content: '▸'; margin-left: auto; transition: transform .2s; }
+.adv[open] .adv__summary::after { transform: rotate(90deg); }
+.adv__summary:hover { background: var(--paper); }
+.adv__body { display: flex; flex-direction: column; gap: .7rem; margin-top: .7rem; }
 
 /* ==================== guided tour ==================== */
 .tour { position: fixed; inset: 0; z-index: 600; pointer-events: none; }

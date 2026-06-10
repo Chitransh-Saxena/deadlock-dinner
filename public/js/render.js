@@ -271,7 +271,7 @@ function shortBubble(p, st, snap) {
     case PSTATE.EATING: return 'yum! 🍝';
     case PSTATE.HUNGRY: return 'hungry!';
     case PSTATE.WAITING:
-      if (p.blockedOn?.kind === 'fork')   return `need 🍴${p.blockedOn.id}`;
+      if (p.blockedOn?.kind === 'fork')   return 'need the other 🍴';
       if (p.blockedOn?.kind === 'seat')   return 'need a seat';
       if (p.blockedOn?.kind === 'waiter') return 'waiting…';
       return 'got one 🍴';
