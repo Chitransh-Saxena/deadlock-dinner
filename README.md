@@ -6,6 +6,8 @@
 
 🔗 **Live demo:** https://deadlock-dinner.pulsar-projects.org
 
+![Deadlock Dinner — the landing page](docs/home.png)
+
 ![Deadlock Dinner — the table](docs/hero.png)
 
 ---
@@ -41,16 +43,19 @@ This site makes it tangible. A 5-year-old can click a philosopher to make them h
 Pure, dependency-free **static site** — vanilla HTML, CSS, and ES modules. No build step, no framework.
 
 ```
-public/index.html          markup + the three tabs
-public/css/styles.css      the "Midnight Maître D'" theme
+public/index.html          markup — Home, Simulation & Code tabs
+public/css/styles.css      the "Trattoria Press" theme (risograph/editorial print)
 public/js/sim.js           the concurrency engine (strategies + deadlock detection)
 public/js/render.js        hybrid SVG + HTML renderer
-public/js/app.js           controls, narrator, log, stats, code viewer
+public/js/app.js           controls, narrator, log, stats, guided tour, code viewer
 public/js/code-samples.js  the Java & Go reference programs
+worker/index.js            tiny Worker: serves the assets + forces HTTPS
 wrangler.jsonc             Cloudflare Worker config (static assets + custom domain)
 ```
 
-Syntax highlighting uses [highlight.js](https://highlightjs.org/) from a CDN (with a graceful plain-text fallback). Fonts: [Fraunces](https://fonts.google.com/specimen/Fraunces), [Hanken Grotesk](https://fonts.google.com/specimen/Hanken+Grotesk), [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono).
+The landing page is a **Home** tab that teaches the concepts, then sends you into the **Simulation**, which greets first-time visitors with a guided tour and hover tooltips on every control.
+
+Syntax highlighting uses [highlight.js](https://highlightjs.org/) from a CDN (with a graceful plain-text fallback). Fonts: [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque) (display), [Newsreader](https://fonts.google.com/specimen/Newsreader) (prose), [Schibsted Grotesk](https://fonts.google.com/specimen/Schibsted+Grotesk) (UI), [Space Mono](https://fonts.google.com/specimen/Space+Mono) (code).
 
 ## Run locally
 
@@ -63,7 +68,7 @@ cd public && python3 -m http.server 8799
 
 ## Deploy
 
-Deployed as a **Cloudflare Worker** serving the `public/` directory as static assets. The `custom_domain` route in `wrangler.jsonc` makes Wrangler auto-provision the DNS record + SSL cert on deploy:
+Deployed as a **Cloudflare Worker** serving the `public/` directory as static assets (with a tiny `worker/index.js` that forces HTTPS). The `custom_domain` route in `wrangler.jsonc` makes Wrangler auto-provision the DNS record + SSL cert on deploy:
 
 ```bash
 wrangler deploy

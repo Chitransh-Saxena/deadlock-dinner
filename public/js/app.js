@@ -16,7 +16,7 @@ const sim = new Simulation(config);
 
 let playing = false;
 let timer = null;
-let speed = 7;             // 1..10
+let speed = 3;             // 1..10 (lower = easier to follow along)
 let deadlockCount = 0;
 let sawDeadlock = false;
 
@@ -29,7 +29,9 @@ const scene = new Scene($('#stage-svg'), $('#stage-phils'), {
 });
 
 // ---- run loop --------------------------------------------------------------
-function intervalMs() { return Math.round(900 - speed * 78); } // speed 1→822ms, 10→120ms
+// Deliberately gentle by default so a human can read each move. speed 1 ≈ 1s
+// per tick, default 3 ≈ 0.8s, max 10 ≈ 0.15s for the impatient.
+function intervalMs() { return Math.round(1100 - speed * 95); }
 
 function play() {
   if (playing) return;
@@ -249,6 +251,16 @@ function wireControls() {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
 
+  // home <-> sim navigation
+  const goHome = () => switchTab('home');
+  const goSim  = () => switchTab('sim');
+  $('#brand').addEventListener('click', goHome);
+  $('#brand').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goHome(); } });
+  $('#back-home').addEventListener('click', goHome);
+  $('#cta-start').addEventListener('click', goSim);
+  $('#cta-start-2').addEventListener('click', goSim);
+  $('#btn-help').addEventListener('click', startTour);
+
   // code viewer
   $$('.lang-btn').forEach(b => b.addEventListener('click', () => setCodeLang(b.dataset.lang)));
   $$('.codestrat-btn').forEach(b => b.addEventListener('click', () => setCodeStrat(b.dataset.strat)));
@@ -282,8 +294,99 @@ function selectStrategy(key) {
 function switchTab(name) {
   $$('.tab').forEach(t => t.classList.toggle('is-active', t.dataset.tab === name));
   $$('.panel').forEach(p => p.classList.toggle('is-active', p.dataset.panel === name));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   if (name === 'code') renderCode();
+  // First time a visitor reaches the table, offer the guided tour.
+  if (name === 'sim' && !localStorage.getItem('dd_tour_seen')) {
+    setTimeout(startTour, 450);
+  }
 }
+
+// ============================================================================
+//  Guided tour (coachmarks)
+// ============================================================================
+const TOUR_STEPS = [
+  { sel: '#card-strategy', title: 'Pick a rule',        body: "Choose how the philosophers grab forks. ‘Naïve’ can get stuck — the other three are deadlock-free." },
+  { sel: '#card-controls', title: 'Play, or step',      body: "Press Play to run it slowly, or Step to move one tick at a time so you can read every move." },
+  { sel: '#btn-deadlock',  title: 'Make a deadlock',    body: "On the Naïve rule, this makes everyone grab a fork at once — and the whole table freezes. ‘Break the jam’ frees it." },
+  { sel: '#stage',         title: 'Click a philosopher', body: "Tap anyone at the table to make them hungry and reach for forks. Try it!" },
+  { sel: '#card-sliders',  title: 'Turn the dials',     body: "Slow things down, add or remove philosophers, and change how long they think and eat." },
+];
+let tourIdx = 0;
+let tourEls = null;
+
+function buildTourDom() {
+  const wrap = document.createElement('div');
+  wrap.className = 'tour'; wrap.hidden = true;
+  wrap.innerHTML = `
+    <div class="tour__spot"></div>
+    <div class="tour__pop">
+      <div class="tour__step"></div>
+      <div class="tour__title"></div>
+      <p class="tour__body"></p>
+      <div class="tour__btns">
+        <button class="tour__skip">Skip</button>
+        <button class="btn btn--small" data-tour="back">Back</button>
+        <button class="btn btn--small btn--primary" data-tour="next">Next</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  tourEls = {
+    wrap, spot: $('.tour__spot', wrap), pop: $('.tour__pop', wrap),
+    step: $('.tour__step', wrap), title: $('.tour__title', wrap), body: $('.tour__body', wrap),
+    back: $('[data-tour="back"]', wrap), next: $('[data-tour="next"]', wrap), skip: $('.tour__skip', wrap),
+  };
+  tourEls.skip.addEventListener('click', endTour);
+  tourEls.back.addEventListener('click', () => gotoTourStep(tourIdx - 1));
+  tourEls.next.addEventListener('click', () => {
+    if (tourIdx >= TOUR_STEPS.length - 1) endTour();
+    else gotoTourStep(tourIdx + 1);
+  });
+  window.addEventListener('resize', () => { if (!tourEls.wrap.hidden) positionTour(); });
+}
+
+function startTour() {
+  if (!tourEls) buildTourDom();
+  localStorage.setItem('dd_tour_seen', '1');
+  // make sure we're on the simulation so targets exist & are visible
+  $$('.tab').forEach(t => t.classList.toggle('is-active', t.dataset.tab === 'sim'));
+  $$('.panel').forEach(p => p.classList.toggle('is-active', p.dataset.panel === 'sim'));
+  tourEls.wrap.hidden = false;
+  gotoTourStep(0);
+}
+function gotoTourStep(i) {
+  tourIdx = Math.max(0, Math.min(TOUR_STEPS.length - 1, i));
+  const s = TOUR_STEPS[tourIdx];
+  tourEls.step.textContent = `Step ${tourIdx + 1} of ${TOUR_STEPS.length}`;
+  tourEls.title.textContent = s.title;
+  tourEls.body.textContent = s.body;
+  tourEls.back.style.visibility = tourIdx === 0 ? 'hidden' : 'visible';
+  tourEls.next.textContent = tourIdx === TOUR_STEPS.length - 1 ? 'Got it! 🎉' : 'Next →';
+  const target = $(s.sel);
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(positionTour, 340);
+}
+function positionTour() {
+  const s = TOUR_STEPS[tourIdx];
+  const target = $(s.sel);
+  if (!target) return;
+  const r = target.getBoundingClientRect();
+  const pad = 8;
+  Object.assign(tourEls.spot.style, {
+    top: `${r.top - pad}px`, left: `${r.left - pad}px`,
+    width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px`,
+  });
+  const pop = tourEls.pop;
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let top = r.bottom + pad + 12;
+  if (top + ph > vh - 12) top = Math.max(12, r.top - ph - pad - 12);
+  let left = r.left + r.width / 2 - pw / 2;
+  left = Math.max(12, Math.min(left, vw - pw - 12));
+  pop.style.top = `${top}px`;
+  pop.style.left = `${left}px`;
+}
+function endTour() { if (tourEls) tourEls.wrap.hidden = true; }
 
 // ============================================================================
 //  Code viewer

@@ -68,23 +68,15 @@ export class Scene {
     const defs = el('defs', {}, this.svg);
     defs.innerHTML = `
       <radialGradient id="candle" cx="50%" cy="50%" r="50%">
-        <stop offset="0%"  stop-color="rgba(255,196,107,0.55)"/>
-        <stop offset="35%" stop-color="rgba(255,150,70,0.18)"/>
-        <stop offset="100%" stop-color="rgba(255,150,70,0)"/>
+        <stop offset="0%"  stop-color="rgba(230,160,25,0.16)"/>
+        <stop offset="55%" stop-color="rgba(225,73,44,0.06)"/>
+        <stop offset="100%" stop-color="rgba(225,73,44,0)"/>
       </radialGradient>
-      <radialGradient id="tableFill" cx="50%" cy="42%" r="62%">
-        <stop offset="0%"  stop-color="#1a1d2b"/>
-        <stop offset="70%" stop-color="#13151f"/>
-        <stop offset="100%" stop-color="#0e1018"/>
-      </radialGradient>
-      <linearGradient id="forkGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#eef1ff"/>
-        <stop offset="100%" stop-color="#aeb4d6"/>
-      </linearGradient>
-      <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
-        <feGaussianBlur stdDeviation="6" result="b"/>
-        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>`;
+      <radialGradient id="tableFill" cx="50%" cy="40%" r="62%">
+        <stop offset="0%"  stop-color="#fdf8ee"/>
+        <stop offset="70%" stop-color="#f6ecd6"/>
+        <stop offset="100%" stop-color="#efe1c6"/>
+      </radialGradient>`;
 
     // ---- candle glow ------------------------------------------------------
     el('circle', { class: 'candle-glow', cx: C, cy: C, r: 300, fill: 'url(#candle)' }, this.svg);
@@ -94,10 +86,15 @@ export class Scene {
     el('circle', { class: 'table-ring', cx: C, cy: C, r: R_RING, fill: 'none' }, this.svg);
     el('circle', { class: 'table-ring-inner', cx: C, cy: C, r: R_RING - 26, fill: 'none' }, this.svg);
 
-    // central candle flame
-    const flame = el('g', { class: 'flame' }, this.svg);
-    el('ellipse', { cx: C, cy: C + 4, rx: 13, ry: 20, fill: '#ffd27a', filter: 'url(#softGlow)' }, flame);
-    el('ellipse', { cx: C, cy: C + 7, rx: 6, ry: 11, fill: '#fff4d6' }, flame);
+    // central bowl of spaghetti (the thing everyone's after)
+    const bowl = el('g', { class: 'bowl' }, this.svg);
+    bowl.innerHTML = `
+      <circle cx="${C}" cy="${C - 2}" r="30" fill="#f0c64e" stroke="#241a13" stroke-width="2.5"/>
+      <path class="bowl-line" d="M ${C - 20} ${C - 7} q 10 -11 20 0 q 10 11 20 0"/>
+      <path class="bowl-line" d="M ${C - 22} ${C + 1} q 11 -10 22 0 q 11 10 22 0"/>
+      <path class="bowl-line" d="M ${C - 18} ${C + 9} q 9 -9 18 0 q 9 9 18 0"/>
+      <circle cx="${C + 10}" cy="${C + 5}" r="6.5" fill="#bb3318" stroke="#241a13" stroke-width="2"/>
+      <path class="bowl-line" d="M ${C - 35} ${C + 7} a 35 17 0 0 0 70 0" stroke-width="3"/>`;
 
     // ---- arrows layer (deadlock cycle) -----------------------------------
     this.refs.arrows = el('g', { class: 'arrows' }, this.svg);
