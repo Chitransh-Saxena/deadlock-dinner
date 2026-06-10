@@ -1,0 +1,19 @@
+{
+  // Cloudflare Worker serving the static site from ./public.
+  // Deployed like the portfolio: a `custom_domain` route makes Wrangler
+  // auto-create the DNS record + SSL cert on `wrangler deploy` (no manual
+  // CNAME needed — covered by the workers:write OAuth scope).
+  // Live at: https://deadlock-dinner.pulsar-projects.org
+  "name": "deadlock-dinner",
+  "account_id": "a82a6302a28c6c2e55c2259f35d17683",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "directory": "./public"
+  },
+  "routes": [
+    { "pattern": "deadlock-dinner.pulsar-projects.org", "custom_domain": true }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

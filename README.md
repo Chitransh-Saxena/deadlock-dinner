@@ -4,7 +4,7 @@
 
 > Five hungry philosophers. Five forks. Each one needs **two** forks to eat spaghetti. What could possibly go wrong? 😅
 
-🔗 **Live demo:** https://deadlock-dinner.pages.dev
+🔗 **Live demo:** https://deadlock-dinner.pulsar-projects.org
 
 ![Deadlock Dinner — the table](docs/hero.png)
 
@@ -41,12 +41,13 @@ This site makes it tangible. A 5-year-old can click a philosopher to make them h
 Pure, dependency-free **static site** — vanilla HTML, CSS, and ES modules. No build step, no framework.
 
 ```
-index.html          markup + the three tabs
-css/styles.css      the "Midnight Maître D'" theme
-js/sim.js           the concurrency engine (strategies + deadlock detection)
-js/render.js        hybrid SVG + HTML renderer
-js/app.js           controls, narrator, log, stats, code viewer
-js/code-samples.js  the Java & Go reference programs
+public/index.html          markup + the three tabs
+public/css/styles.css      the "Midnight Maître D'" theme
+public/js/sim.js           the concurrency engine (strategies + deadlock detection)
+public/js/render.js        hybrid SVG + HTML renderer
+public/js/app.js           controls, narrator, log, stats, code viewer
+public/js/code-samples.js  the Java & Go reference programs
+wrangler.jsonc             Cloudflare Worker config (static assets + custom domain)
 ```
 
 Syntax highlighting uses [highlight.js](https://highlightjs.org/) from a CDN (with a graceful plain-text fallback). Fonts: [Fraunces](https://fonts.google.com/specimen/Fraunces), [Hanken Grotesk](https://fonts.google.com/specimen/Hanken+Grotesk), [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono).
@@ -56,21 +57,21 @@ Syntax highlighting uses [highlight.js](https://highlightjs.org/) from a CDN (wi
 It's static, so any web server works (you do need a server, not `file://`, because it uses ES modules):
 
 ```bash
-python3 -m http.server 8799
+cd public && python3 -m http.server 8799
 # open http://localhost:8799
 ```
 
 ## Deploy
 
-Deployed to **Cloudflare Pages**:
+Deployed as a **Cloudflare Worker** serving the `public/` directory as static assets. The `custom_domain` route in `wrangler.jsonc` makes Wrangler auto-provision the DNS record + SSL cert on deploy:
 
 ```bash
-wrangler pages deploy . --project-name deadlock-dinner
+wrangler deploy
 ```
 
 ## The reference code
 
-Both languages compile cleanly (`javac`, `go build`/`go vet`) and the `naive` versions genuinely *can* deadlock — that's the point. See the **Code** tab in the app or [`js/code-samples.js`](js/code-samples.js).
+Both languages compile cleanly (`javac`, `go build`/`go vet`) and the `naive` versions genuinely *can* deadlock — that's the point. See the **Code** tab in the app or [`public/js/code-samples.js`](public/js/code-samples.js).
 
 ## License
 
