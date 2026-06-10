@@ -59,11 +59,19 @@ Syntax highlighting uses [highlight.js](https://highlightjs.org/) from a CDN (wi
 
 ## Run locally
 
-It's static, so any web server works (you do need a server, not `file://`, because it uses ES modules):
+It deploys as a Worker, so preview it the way it actually runs in production — with Wrangler, which serves `worker/index.js` **and** the `public/` assets together:
+
+```bash
+wrangler dev
+# open http://localhost:8787
+```
+
+(The Worker only forces HTTPS on real hostnames, so `wrangler dev` over `http://localhost` previews fine.)
+
+Or, to preview just the static front-end without the Worker, any static server works (it needs a server, not `file://`, because it uses ES modules):
 
 ```bash
 cd public && python3 -m http.server 8799
-# open http://localhost:8799
 ```
 
 ## Deploy
