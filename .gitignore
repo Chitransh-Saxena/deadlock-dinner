@@ -1,0 +1,11 @@
+# dependencies (none needed — this is a static site)
+node_modules/
+
+# os / editor cruft
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# cloudflare / wrangler
+.wrangler/

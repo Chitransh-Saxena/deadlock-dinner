@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deadlock Dinner — The Dining Philosophers, visualized</title>
+  <meta name="description" content="A playful, interactive visualization of the Dining Philosophers problem. Watch locks, mutexes, semaphores and deadlock come alive — with real Java &amp; Go code." />
+  <meta name="theme-color" content="#0b0d14" />
+  <!-- social -->
+  <meta property="og:title" content="Deadlock Dinner — The Dining Philosophers" />
+  <meta property="og:description" content="See locks, mutexes, semaphores and deadlock come alive. Interactive, kid-friendly, with real Java & Go code." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%9D%3C/text%3E%3C/svg%3E" />
+
+  <!-- fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- syntax highlighting theme (overridden in styles.css) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">🍝</span>
+      <div class="brand__text">
+        <h1 class="brand__title">Deadlock&nbsp;Dinner</h1>
+        <p class="brand__sub">The Dining Philosophers, made visible</p>
+      </div>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab is-active" data-tab="sim"   role="tab">🎬 <span>Simulation</span></button>
+      <button class="tab"           data-tab="code"  role="tab">⌨️ <span>The Code</span></button>
+      <button class="tab"           data-tab="learn" role="tab">💡 <span>Learn</span></button>
+    </nav>
+
+    <div class="header-status">
+      <span id="status-pill" class="status-pill" data-state="paused">❚❚ paused</span>
+    </div>
+  </header>
+
+  <main class="site-main">
+
+    <!-- ===================== SIMULATION PANEL ===================== -->
+    <section class="panel is-active" data-panel="sim" role="tabpanel">
+      <div class="sim-layout">
+
+        <!-- ---- main: narrator + stage ---- -->
+        <div class="sim-main">
+          <div id="narrator" class="narrator narrator--info">
+            <span class="narrator__icon" aria-hidden="true">📣</span>
+            <span id="narrator-text">Welcome to dinner!</span>
+          </div>
+
+          <div class="stage" id="stage">
+            <svg id="stage-svg" class="stage__svg" aria-label="Dining table with philosophers and forks"></svg>
+            <div id="stage-phils" class="stage__phils" aria-hidden="false"></div>
+            <p class="stage__hint">👆 Tip: click a philosopher to make them hungry</p>
+          </div>
+
+          <ul class="legend" aria-label="What the colors mean">
+            <li class="legend__item"><span class="legend__dot legend__dot--thinking"></span>thinking</li>
+            <li class="legend__item"><span class="legend__dot legend__dot--hungry"></span>hungry</li>
+            <li class="legend__item"><span class="legend__dot legend__dot--waiting"></span>holding a fork, waiting</li>
+            <li class="legend__item"><span class="legend__dot legend__dot--eating"></span>eating 🍝</li>
+            <li class="legend__item"><span class="legend__dot legend__dot--deadlock"></span>stuck (deadlock)</li>
+          </ul>
+        </div>
+
+        <!-- ---- rail: controls ---- -->
+        <aside class="sim-rail">
+
+          <!-- strategy chooser -->
+          <div class="card">
+            <h2 class="card__title">Pick a rule</h2>
+            <p class="card__hint">How do the philosophers decide to grab forks?</p>
+            <div class="strat-cards">
+              <button class="strat-card is-active" data-strat="naive">
+                <span class="strat-card__emoji">🙈</span>
+                <span class="strat-card__name">Naïve</span>
+                <span class="strat-card__tag danger">can deadlock</span>
+              </button>
+              <button class="strat-card" data-strat="hierarchy">
+                <span class="strat-card__emoji">🔢</span>
+                <span class="strat-card__name">Fork Order</span>
+                <span class="strat-card__tag safe">safe</span>
+              </button>
+              <button class="strat-card" data-strat="waiter">
+                <span class="strat-card__emoji">🤵</span>
+                <span class="strat-card__name">The Waiter</span>
+                <span class="strat-card__tag safe">safe</span>
+              </button>
+              <button class="strat-card" data-strat="semaphore">
+                <span class="strat-card__emoji">🪑</span>
+                <span class="strat-card__name">Limited Seats</span>
+                <span class="strat-card__tag safe">safe</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- strategy explainer -->
+          <div class="card explain">
+            <div class="explain__head">
+              <h3 id="strat-explain-title" class="explain__title">Naïve — Grab left, then right</h3>
+              <span id="strat-explain-badge" class="explain__badge" data-safe="false">can deadlock</span>
+            </div>
+            <p id="strat-explain-kid" class="explain__kid"></p>
+            <details class="explain__more">
+              <summary>For grown-ups 🤓</summary>
+              <p id="strat-explain-tech" class="explain__tech"></p>
+            </details>
+            <div id="strategy-readout" class="readout" hidden></div>
+          </div>
+
+          <!-- transport controls -->
+          <div class="card">
+            <div class="controls">
+              <button id="btn-play" class="btn btn--primary">
+                <span class="btn__icon">▶</span><span class="btn__label">Play</span>
+              </button>
+              <button id="btn-step" class="btn">
+                <span class="btn__icon">⏭</span><span class="btn__label">Step</span>
+              </button>
+              <button id="btn-reset" class="btn">
+                <span class="btn__icon">↺</span><span class="btn__label">Reset</span>
+              </button>
+            </div>
+            <div class="controls controls--danger">
+              <button id="btn-deadlock" class="btn btn--ghost-danger">💥 Force deadlock</button>
+              <button id="btn-resolve" class="btn btn--ghost-safe js-resolve">🩹 Break the jam</button>
+            </div>
+          </div>
+
+          <!-- sliders -->
+          <div class="card sliders">
+            <label class="slider">
+              <span class="slider__label">Speed <b id="ctl-speed-val">7</b></span>
+              <input id="ctl-speed" type="range" min="1" max="10" value="7" />
+            </label>
+            <label class="slider">
+              <span class="slider__label">Philosophers <b id="ctl-n-val">5</b></span>
+              <input id="ctl-n" type="range" min="3" max="7" value="5" />
+            </label>
+            <label class="slider">
+              <span class="slider__label">Think time <b id="ctl-think-val">2</b></span>
+              <input id="ctl-think" type="range" min="1" max="8" value="2" />
+            </label>
+            <label class="slider">
+              <span class="slider__label">Eat time <b id="ctl-eat-val">2</b></span>
+              <input id="ctl-eat" type="range" min="1" max="8" value="2" />
+            </label>
+            <label class="toggle">
+              <input id="ctl-manual" type="checkbox" />
+              <span class="toggle__track"><span class="toggle__thumb"></span></span>
+              <span class="toggle__label">Manual mode <small>(only eat when clicked)</small></span>
+            </label>
+          </div>
+
+          <!-- stats -->
+          <div class="card stats">
+            <div class="stat"><span class="stat__num" id="stat-tick">0</span><span class="stat__lbl">ticks</span></div>
+            <div class="stat"><span class="stat__num" id="stat-meals">0</span><span class="stat__lbl">meals</span></div>
+            <div class="stat"><span class="stat__num stat__num--danger" id="stat-deadlocks">0</span><span class="stat__lbl">deadlocks</span></div>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Meals eaten</h3>
+            <div id="meal-bars" class="meal-bars"></div>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Live event log</h3>
+            <ul id="log" class="log" aria-live="polite"></ul>
+          </div>
+
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================== CODE PANEL ===================== -->
+    <section class="panel" data-panel="code" role="tabpanel">
+      <div class="code-wrap">
+        <div class="code-toolbar">
+          <div class="seg">
+            <button class="lang-btn is-active" data-lang="java">Java</button>
+            <button class="lang-btn" data-lang="go">Go</button>
+          </div>
+          <div class="seg seg--scroll">
+            <button class="codestrat-btn is-active" data-strat="naive">Naïve</button>
+            <button class="codestrat-btn" data-strat="hierarchy">Fork Order</button>
+            <button class="codestrat-btn" data-strat="waiter">The Waiter</button>
+            <button class="codestrat-btn" data-strat="semaphore">Limited Seats</button>
+          </div>
+          <button id="btn-copy" class="btn btn--small">Copy</button>
+        </div>
+        <p id="code-caption" class="code-caption"></p>
+        <pre class="code-pre"><code id="code-block" class="language-java"></code></pre>
+      </div>
+    </section>
+
+    <!-- ===================== LEARN PANEL ===================== -->
+    <section class="panel" data-panel="learn" role="tabpanel">
+      <div class="learn">
+        <header class="learn__hero">
+          <h2>The 5-year-old's guide to deadlock 🍝</h2>
+          <p>Five hungry philosophers sit around a table of spaghetti. Between each pair of them is a single fork. To eat, a philosopher needs <b>two</b> forks — the one on their left <i>and</i> the one on their right. But there are only as many forks as philosophers. Uh oh.</p>
+        </header>
+
+        <div class="learn__grid">
+          <article class="concept">
+            <span class="concept__emoji">🍴</span>
+            <h3>A fork is a <em>lock</em></h3>
+            <p class="concept__kid">Only one person can hold a fork at a time. If you have it, your neighbour has to wait. That's exactly what a <b>lock</b> does in code: it lets just one task use something at once.</p>
+            <p class="concept__tech">A <code>lock</code> (or <code>mutex</code> — “mutual exclusion”) guarantees only one thread enters a critical section at a time.</p>
+          </article>
+
+          <article class="concept">
+            <span class="concept__emoji">🔒</span>
+            <h3>Locking &amp; unlocking</h3>
+            <p class="concept__kid">Picking up a fork = <b>locking</b>. Putting it down = <b>unlocking</b>. While you hold it, nobody else can. When you're done eating, you let go so someone else can grab it.</p>
+            <p class="concept__tech"><code>lock()</code> acquires; <code>unlock()</code> releases. Forgetting to unlock starves everyone else.</p>
+          </article>
+
+          <article class="concept concept--danger">
+            <span class="concept__emoji">💥</span>
+            <h3>Deadlock</h3>
+            <p class="concept__kid">If <b>everyone</b> grabs their left fork at the same time, every philosopher is now holding one fork and waiting for the other — which their neighbour is holding. Nobody will ever let go. Everyone is stuck forever. That's a <b>deadlock</b>.</p>
+            <p class="concept__tech">Deadlock needs all four at once: <b>mutual exclusion</b>, <b>hold-and-wait</b>, <b>no preemption</b>, and a <b>circular wait</b>. Break any one and you're safe.</p>
+          </article>
+
+          <article class="concept concept--safe">
+            <span class="concept__emoji">🔢</span>
+            <h3>Fix #1 — Fork order</h3>
+            <p class="concept__kid">Number the forks. Make everyone grab the smaller number first. Now the circle can't close — someone always gets both forks and eats.</p>
+            <p class="concept__tech">A <b>resource hierarchy</b> breaks the circular-wait condition.</p>
+          </article>
+
+          <article class="concept concept--safe">
+            <span class="concept__emoji">🤵</span>
+            <h3>Fix #2 — The waiter</h3>
+            <p class="concept__kid">A waiter only lets you pick up forks if <b>both</b> are free. So you never get stuck holding just one.</p>
+            <p class="concept__tech">An <b>arbitrator</b> (a single mutex) makes the two pickups atomic, killing hold-and-wait.</p>
+          </article>
+
+          <article class="concept concept--safe">
+            <span class="concept__emoji">🪑</span>
+            <h3>Fix #3 — Limited seats</h3>
+            <p class="concept__kid">Leave one chair empty. With someone always sitting out, there's a gap in the circle, so it can't lock up.</p>
+            <p class="concept__tech">A <b>counting semaphore</b> of N−1 caps concurrent diners and breaks the cycle.</p>
+          </article>
+        </div>
+
+        <div class="learn__try">
+          <h3>Try it yourself 👇</h3>
+          <ol>
+            <li>Go to <b>Simulation</b>, keep the rule on <b>Naïve</b>, and hit <b>💥 Force deadlock</b>. Watch everyone freeze.</li>
+            <li>Press <b>🩹 Break the jam</b> — one philosopher gives up a fork and the table flows again.</li>
+            <li>Now switch the rule to <b>Fork Order</b>, <b>The Waiter</b>, or <b>Limited Seats</b> and try to force a deadlock. You can't! 🎉</li>
+            <li>Turn on <b>Manual mode</b> and click philosophers one-by-one to stage your own deadlock.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== DEADLOCK BANNER ===================== -->
+  <div id="deadlock-banner" class="deadlock-banner" hidden>
+    <div class="deadlock-banner__inner">
+      <span class="deadlock-banner__stamp">DEADLOCK</span>
+      <p class="deadlock-banner__text">Everyone is holding one fork and waiting for another. Nobody can move! 😵</p>
+      <button class="btn btn--primary js-resolve">🩹 Break the jam</button>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <span>Made with 🍝 to explain locks, mutexes &amp; deadlock.</span>
+    <span class="site-footer__hint">space = play/pause · s = step · r = reset</span>
+  </footer>
+
+  <!-- syntax highlighting (classic script so it's ready before the module runs) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
